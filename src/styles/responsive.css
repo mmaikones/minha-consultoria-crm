@@ -1,0 +1,85 @@
+/* Base Container */
+.container-responsive {
+    width: 100%;
+    padding: var(--spacing-md);
+    margin: 0 auto;
+}
+
+@media (min-width: 1920px) {
+    .container-responsive {
+        max-width: 1400px;
+    }
+}
+
+/* Responsive Grid */
+.grid-responsive {
+    display: grid;
+    gap: var(--spacing-md);
+}
+
+/* Desktop (1920px+) */
+@media (min-width: 1920px) {
+    .grid-responsive {
+        grid-template-columns: repeat(12, 1fr);
+    }
+
+    .col-span-12 {
+        grid-column: span 12;
+    }
+
+    .col-span-6 {
+        grid-column: span 6;
+    }
+
+    .col-span-4 {
+        grid-column: span 4;
+    }
+
+    .col-span-3 {
+        grid-column: span 3;
+    }
+}
+
+/* Laptop (1024-1919px) */
+@media (min-width: 1024px) and (max-width: 1919px) {
+    .grid-responsive {
+        grid-template-columns: repeat(12, 1fr);
+        gap: 12px;
+    }
+}
+
+/* Tablet (768-1023px) */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .grid-responsive {
+        grid-template-columns: repeat(6, 1fr);
+        gap: 12px;
+    }
+
+    .col-span-tablet-6 {
+        grid-column: span 6;
+    }
+
+    .col-span-tablet-3 {
+        grid-column: span 3;
+    }
+}
+
+/* Mobile (375-767px) */
+@media (max-width: 767px) {
+    .grid-responsive {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+
+    .col-span-mobile-2 {
+        grid-column: span 2;
+    }
+
+    .col-span-mobile-1 {
+        grid-column: span 1;
+    }
+
+    .hidden-mobile {
+        display: none !important;
+    }
+}

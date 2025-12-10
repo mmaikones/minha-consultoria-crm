@@ -229,13 +229,6 @@ class EvolutionService {
         };
     }
 
-    /**
-     * Fetch all instances
-     * GET /instance/fetchInstances
-     * @see https://doc.evolution-api.com/v2/api-reference/fetch-instances
-     * 
-     * BLINDAGEM: Normaliza diversos formatos de resposta da API
-     */
     // --- CACHE HELPERS ---
     private saveCache(key: string, data: any) {
         try {
@@ -303,8 +296,8 @@ class EvolutionService {
             return normalized;
         } catch (error) {
             console.error('[Evolution API] Error fetching instances:', error);
-            // On error, return cache if empty response? No, connection manager handles that.
-            throw error;
+            // Return cache as fallback
+            return this.getCache<EvolutionInstance[]>('instances') || [];
         }
     }
 
@@ -379,7 +372,7 @@ class EvolutionService {
             console.log(`[Evolution API] Processed ${chats.length} chats`);
 
             const mappedChats = chats.map(c => ({
-                id: c.id || c.remoteJid,
+                id: c.remoteJid || c.id,
                 name: c.name || c.pushName || c.contact?.name || c.contact?.pushName || c.id?.split('@')[0] || 'Desconhecido',
                 lastMessage: this.extractMessageContent(c.lastMessage),
                 unreadCount: c.unreadCount || 0,
@@ -424,7 +417,7 @@ class EvolutionService {
                     },
                     options: {
                         limit: count,
-                        sort: "DESC"
+                        sort: "ASC"
                     }
                 })
             });
@@ -437,9 +430,12 @@ class EvolutionService {
                 messages = rawData;
             }
 
+            // Ordena manualmente por timestamp (ASC: antigas -> novas)
+            messages.sort((a: any, b: any) => (a.messageTimestamp || a.timestamp) - (b.messageTimestamp || b.timestamp));
+
             console.log(`[Evolution API] fetchMessages for ${remoteJid}: Found ${messages.length}`);
 
-            // Mapeia e inverte para ordem cronológica (antigas -> novas)
+            // Mapeia para ordem cronológica (antigas -> novas) - já ordenado pela API
             const mapped = messages.slice(0, count).map((m: any) => ({
                 id: m.key?.id || m.id || `msg-${Date.now()}`,
                 key: m.key,
@@ -448,7 +444,7 @@ class EvolutionService {
                 timestamp: m.messageTimestamp || m.timestamp || Date.now() / 1000,
                 type: m.messageType || this.getMessageType(m.message),
                 pushName: m.pushName || m.participant
-            })).reverse();
+            }));
 
             if (mapped.length > 0) {
                 this.saveCache(`msgs_${remoteJid}`, mapped);

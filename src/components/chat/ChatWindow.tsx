@@ -31,20 +31,23 @@ export default function ChatWindow({ chat, onOpenProtocol, onSendMessage }: Chat
             try {
                 const instanceName = evolutionService.getActiveInstance();
 
-                // Try cache first
-                // Assuming getCachedMessages takes (remoteJid) based on previous TS error
-                // If it needs instance, the key generation inside service likely handles it or uses just jid
+                // Tenta cache primeiro
                 const cached = evolutionService.getCachedMessages(chat.id);
                 if (cached && cached.length > 0) {
                     setMessages(cached);
                 }
 
                 if (instanceName) {
-                    // Correct order: remoteJid, count, instanceName
+                    // Busca na API e sobrescreve o cache/estado
                     const fresh = await evolutionService.fetchMessages(chat.id, 50, instanceName);
                     if (fresh && fresh.length > 0) {
                         setMessages(fresh);
+                    } else if (cached.length === 0) {
+                        // Se a API não retornou nada e não havia cache, limpa as mensagens
+                        setMessages([]);
                     }
+                } else if (cached.length === 0) {
+                    setMessages([]);
                 }
             } catch (error) {
                 console.error("Error fetching messages:", error);
@@ -55,17 +58,6 @@ export default function ChatWindow({ chat, onOpenProtocol, onSendMessage }: Chat
 
         fetchMessages();
     }, [chat]);
-
-    useEffect(() => {
-        scrollToBottom();
-    }, [messages]);
-
-    const handleKeyPress = (e: React.KeyboardEvent) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            handleSendMessage();
-        }
-    };
 
     const handleSendMessage = async () => {
         if (!message.trim() || !chat) return;
@@ -105,6 +97,12 @@ export default function ChatWindow({ chat, onOpenProtocol, onSendMessage }: Chat
                     // Could revert optimistic update here
                 }
             }
+        }
+    };
+
+    const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') {
+            handleSendMessage();
         }
     };
 
